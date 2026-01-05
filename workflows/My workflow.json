@@ -1,0 +1,153 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "expense-ai",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1ab875ef-fa89-42fd-8ab5-5bbe56c63762",
+      "name": "Webhook",
+      "webhookId": "9688ec6e-40d5-44c7-972b-1a8c37464933"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7c95d251-9a5e-421d-ac58-aa6d1b305c0c",
+              "name": "text",
+              "value": "={{$json.body.text}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a9a6f3ce-25f5-4ae8-9ea5-b7844a1aedd8",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "conversation",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a finance assistant. Convert user input into strict JSON only.\n"
+            },
+            {
+              "content": "=Input: {{$json.text}}\n\nReturn ONLY valid JSON:\n{\n  \"title\": \"Reimbursement Summary\",\n  \"currency\": \"CNY\",\n  \"items\": [\n    {\n      \"date\": \"YYYY-MM-DD\",\n      \"category\": \"transport/meal/office/entertainment/other\",\n      \"amount\": 0,\n      \"vendor\": \"\",\n      \"note\": \"\",\n      \"reimbursable\": true\n    }\n  ],\n  \"total\": 0,\n  \"flags\": []\n}\nRules:\n- If date missing, use today\n- total = sum of items.amount\n- No extra text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        0
+      ],
+      "id": "5d10c813-aad6-4875-9dc7-30c91fd92920",
+      "name": "Create a conversation",
+      "credentials": {
+        "openAiApi": {
+          "id": "bGjPq4T5QxBqyCJe",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        624,
+        0
+      ],
+      "id": "b6761510-c730-412d-8192-1fe86e80d2a3",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "webhook -> API、前端、AI 服务、系统对系统",
+        "height": 80
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "ac466256-4eeb-4232-99d8-d57adbc2a048",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create a conversation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a conversation": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "ac14565b-828a-4d39-a9b1-4304a6694ee8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8c3873e9989d361f82c3a9ba2291852f050955e2182c49b63c16d3dbcddaf553"
+  },
+  "id": "6S4nyjthWCLkUQG6",
+  "tags": []
+}

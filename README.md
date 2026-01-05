@@ -1,0 +1,2 @@
+n8n Expense AI is a lightweight AI-powered backend service built with n8n and OpenAI.
+It exposes an HTTP Webhook API that converts unstructured expense descriptions into structured JSON, suitable for automation, backend integration, and AI workflow demos. The project demonstrates how to build a deterministic AI microservice using LLMs, webhooks, and Docker.

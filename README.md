@@ -1,12 +1,11 @@
 # Finance AI Full-Stack Assistant
 
-This repository contains a full-stack personal finance assistant built around three pieces:
+This repository contains a full-stack personal finance assistant built around two main pieces:
 
 - `client/`: a React + Vite dashboard for transaction review, reports, and multi-agent chat
 - `server/`: a FastAPI + LangGraph backend for finance analysis, user profiles, and agent orchestration
-- `workflows/`: auxiliary n8n workflow assets for integration experiments
 
-The primary application is the React client talking to the FastAPI server. n8n remains in the repository as an optional supporting integration layer, not the main application boundary.
+The primary application is the React client talking to the FastAPI server. n8n can still be integrated externally if needed, but it is no longer represented as a first-class directory in this repository.
 
 ## Architecture
 
@@ -19,9 +18,6 @@ server (FastAPI/LangGraph)
   -> multi-agent orchestration
   -> transaction enrichment, anomaly detection, summaries
   -> MongoDB-backed profile/chat persistence
-
-workflows (n8n)
-  -> optional automation and ingestion experiments
 ```
 
 ## Repository Layout
@@ -29,7 +25,6 @@ workflows (n8n)
 ```text
 client/      React frontend
 server/      FastAPI + LangGraph backend
-workflows/   Optional n8n workflow exports
 ```
 
 ## Prerequisites
@@ -106,6 +101,6 @@ The backend keeps the current public routes:
 - `GET /chat/history/{user_id}`
 - `DELETE /chat/history/{user_id}`
 
-## Notes on Workflows
+## Notes on n8n
 
-The `workflows/` directory is intentionally kept separate from the main app runtime. Treat it as integration support for n8n-based ingestion or automation, not as the source of truth for the application architecture.
+If you still use n8n in your setup, treat it as an external integration layer around this repository rather than a source directory inside it.

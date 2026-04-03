@@ -1,0 +1,73 @@
+services:
+  n8n:
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    image: n8nio/n8n:latest
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - WEBHOOK_URL=http://localhost:5678/
+      - N8N_CORS_ALLOW_ORIGIN=*
+      - N8N_CORS_ALLOW_METHODS=GET,POST,PUT,DELETE,OPTIONS
+      - N8N_CORS_ALLOW_HEADERS=*
+      - TZ=Australia/Sydney
+    volumes:
+      - ~/.n8n:/home/node/.n8n
+    restart: always
+
+  mongo:
+    image: mongo:7
+    container_name: finance-ai-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  server:
+    build:
+      context: ./server
+    container_name: finance-ai-server
+    depends_on:
+      - mongo
+    ports:
+      - "8000:8000"
+    environment:
+      - LLM_PROVIDER=ollama
+      - OLLAMA_MODEL=llama3.2:3b
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      # Uncomment below to use OpenAI instead:
+      # - LLM_PROVIDER=openai
+      # - OPENAI_API_KEY=sk-your-key
+      # - OPENAI_MODEL=gpt-4o
+      # MongoDB
+      - MONGODB_URI=mongodb://mongo:27017
+      - MONGODB_DB=finance_ai
+      # NewsAPI
+      # - NEWS_API_KEY=your-key-here
+      - TZ=Australia/Sydney
+    restart: unless-stopped
+
+  # client:
+  #   build:
+  #     context: ./client
+  #   container_name: finance-ai-client
+  #   depends_on:
+  #     - server
+  #   ports:
+  #     - "5173:5173"
+  #   environment:
+  #     - VITE_N8N_WEBHOOK_URL=http://localhost:5678/webhook-test/finance-analyze-pdf
+  #     - VITE_LLM_ENDPOINT=http://server:8000/chat
+  #   volumes:
+  #     - ./client:/app
+  #     - /app/node_modules
+  #   restart: always
+
+volumes:
+  mongo_data:

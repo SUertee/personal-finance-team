@@ -1,9 +1,10 @@
 """
-memory.py - Conversation memory with MongoDB persistence.
+Conversation memory with PostgreSQL persistence and in-memory cache.
 """
 
 from collections import defaultdict
-from mongo_store import clear_history_db, get_chat_history_db, save_message_db
+
+from db.chat_repo import clear_history_db, get_chat_history_db, save_message_db
 
 MAX_HISTORY = 50
 _history: dict[str, list[dict]] = defaultdict(list)

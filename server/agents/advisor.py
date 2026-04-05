@@ -3,7 +3,7 @@ Advisor Agent - Financial advice, asset allocation, investment suggestions
 """
 from collections import defaultdict
 from langchain_core.messages import HumanMessage, SystemMessage
-from models import UserProfile
+from models.user import UserProfile
 from services.llm import get_llm
 
 SYSTEM_PROMPT = """You are a personal financial advisor. Provide:

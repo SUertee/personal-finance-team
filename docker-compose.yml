@@ -20,23 +20,34 @@ services:
       - ~/.n8n:/home/node/.n8n
     restart: always
 
-  mongo:
-    image: mongo:7
-    container_name: finance-ai-mongo
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: personal-finance-team-db
     ports:
-      - "27017:27017"
+      - "127.0.0.1:15433:5432"
+    environment:
+      - POSTGRES_DB=personal_finance
+      - POSTGRES_USER=personal_finance_user
+      - POSTGRES_PASSWORD=personal_finance_password
     volumes:
-      - mongo_data:/data/db
-    restart: unless-stopped
+      - ./storage/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U personal_finance_user -d personal_finance"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    restart: always
 
   server:
     build:
       context: ./server
     container_name: finance-ai-server
     depends_on:
-      - mongo
+      db:
+        condition: service_healthy
     ports:
-      - "8000:8000"
+      - "18000:8000"
     environment:
       - LLM_PROVIDER=ollama
       - OLLAMA_MODEL=llama3.2:3b
@@ -45,9 +56,8 @@ services:
       # - LLM_PROVIDER=openai
       # - OPENAI_API_KEY=sk-your-key
       # - OPENAI_MODEL=gpt-4o
-      # MongoDB
-      - MONGODB_URI=mongodb://mongo:27017
-      - MONGODB_DB=finance_ai
+      # PostgreSQL
+      - POSTGRES_DSN=postgresql://personal_finance_user:personal_finance_password@db:5432/personal_finance
       # NewsAPI
       # - NEWS_API_KEY=your-key-here
       - TZ=Australia/Sydney
@@ -68,6 +78,3 @@ services:
   #     - ./client:/app
   #     - /app/node_modules
   #   restart: always
-
-volumes:
-  mongo_data:

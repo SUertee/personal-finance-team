@@ -9,8 +9,8 @@ from typing import Literal
 from langgraph.graph import END, StateGraph
 from typing_extensions import TypedDict
 from agents import advisor, budget_analyst, expense_analyst, insight, news_scout
-from models import UserProfile
-from services.llm import get_llm
+from models.user import UserProfile
+from services.llm import get_llm, get_router_llm
 from langchain_core.messages import HumanMessage, SystemMessage
 
 
@@ -38,7 +38,7 @@ Respond with ONLY JSON: {"agent": "<name>", "refined_query": "<query>", "needs_r
 
 
 def router_node(state: AgentState) -> dict:
-    llm = get_llm()
+    llm = get_router_llm()
     profile = state["profile"]
     context = f"User: {profile.get('name', 'Unknown')}, Goals: {', '.join(profile.get('financial_goals', []))}"
     history_text = ""

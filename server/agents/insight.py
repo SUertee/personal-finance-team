@@ -3,7 +3,7 @@ Insight Agent - Strategic trend analysis, future projections
 """
 from collections import defaultdict
 from langchain_core.messages import HumanMessage, SystemMessage
-from models import UserProfile
+from models.user import UserProfile
 from services.llm import get_llm
 
 SYSTEM_PROMPT = """You are a strategic financial insight analyst. Provide:

@@ -88,8 +88,8 @@ export default function App() {
         fetchLatestAnalysisRun(userId),
       ]);
 
-      console.log("[supabase] transactions:", transactions);
-      console.log("[supabase] latestRun:", latestRunResponse);
+      console.log("[api] transactions:", transactions);
+      console.log("[api] latestRun:", latestRunResponse);
 
       setTxs(transactions);
       setLatestRun(latestRunResponse ?? null);

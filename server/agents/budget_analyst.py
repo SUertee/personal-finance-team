@@ -1,7 +1,7 @@
 """
 Budget Analyst Agent - Income vs expenses, savings rate, financial health
 """
-from models import UserProfile
+from models.user import UserProfile
 from services.llm import get_llm, llm_json_reply
 
 SYSTEM_PROMPT = """You are a budget analyst. Return ONLY valid JSON:

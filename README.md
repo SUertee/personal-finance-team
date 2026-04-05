@@ -17,21 +17,31 @@ client (React/Vite)
 server (FastAPI/LangGraph)
   -> multi-agent orchestration
   -> transaction enrichment, anomaly detection, summaries
-  -> MongoDB-backed profile/chat persistence
+  -> pgvector/PostgreSQL-backed profile/chat persistence
 ```
 
 ## Repository Layout
 
 ```text
-client/      React frontend
-server/      FastAPI + LangGraph backend
+client/                  React frontend (Vite + TypeScript)
+server/
+  app.py                 FastAPI entrypoint (mounts routers)
+  api/                   Route handlers (analyze, chat, profile, health)
+  agents/                LangGraph multi-agent system (5 specialist agents)
+  db/                    PostgreSQL persistence (connection, repos, schema.sql)
+  models/                Pydantic models (user, chat, analysis)
+  services/              Business logic (LLM, categorizer, anomalies, memory)
+docker-compose.yml       n8n + pgvector/PostgreSQL + server
 ```
+
+Each `server/` subfolder has its own `README.md` with detailed documentation.
 
 ## Prerequisites
 
 - Node.js 20+
 - Python 3.12+
-- MongoDB 7+ or Docker
+- PostgreSQL 16+ or Docker
+- Local Docker database image defaults to `pgvector/pgvector:pg16`
 - Optional: Ollama or OpenAI credentials for LLM access
 - Optional: n8n for workflow experiments
 
@@ -43,16 +53,18 @@ Use `server/.env.example` as the reference for local configuration. The backend 
 
 - `LLM_PROVIDER=ollama` with `OLLAMA_BASE_URL` and `OLLAMA_MODEL`
 - `LLM_PROVIDER=openai` with `OPENAI_API_KEY` and `OPENAI_MODEL`
-- `MONGODB_URI` and `MONGODB_DB`
+- `POSTGRES_DSN` or `DATABASE_URL`
+- default local DSN: `postgresql://personal_finance_user:personal_finance_password@localhost:15432/personal_finance`
 - optional `NEWS_API_KEY`
 
 ### Client
 
 Typical local client variables:
 
-- `VITE_LLM_ENDPOINT=http://localhost:8000/chat`
+- `VITE_API_BASE_URL=http://localhost:18000`
+- `VITE_LLM_ENDPOINT=http://localhost:18000/chat`
 - `VITE_N8N_WEBHOOK_URL=http://localhost:5678/webhook-test/finance-analyze-pdf`
-- any Supabase values required by the dashboard views
+- no Supabase variables are required for the current local Postgres flow
 
 ## Local Development
 
@@ -63,7 +75,14 @@ cd server
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-uvicorn app:app --reload --host 0.0.0.0 --port 8000
+uvicorn app:app --reload --host 0.0.0.0 --port 18000
+```
+
+To import the locally processed statement data into Postgres:
+
+```bash
+cd ..
+python3 scripts/import_processed_to_postgres.py
 ```
 
 ### Run the client
@@ -79,7 +98,7 @@ npm run dev
 The root `docker-compose.yml` provisions:
 
 - `n8n`
-- `mongo`
+- `db` (`pgvector/pgvector:pg16`)
 - `server`
 
 The `client` service is included as a commented template and can be enabled when needed.
@@ -87,6 +106,13 @@ The `client` service is included as a commented template and can be enabled when
 ```bash
 docker compose up --build
 ```
+
+Default local endpoints after compose startup:
+
+- database: `127.0.0.1:15432`
+- server: `http://localhost:18000`
+- n8n: `http://localhost:5678`
+- frontend API base: `http://localhost:18000`
 
 ## API Overview
 
@@ -100,6 +126,8 @@ The backend keeps the current public routes:
 - `PUT /profile/{user_id}`
 - `GET /chat/history/{user_id}`
 - `DELETE /chat/history/{user_id}`
+- `GET /transactions/{user_id}`
+- `GET /analysis-runs/latest/{user_id}`
 
 ## Notes on n8n
 

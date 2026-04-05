@@ -2,7 +2,7 @@
 News Scout Agent - Fetches real news via NewsAPI, analyzes for user
 """
 from langchain_core.messages import HumanMessage, SystemMessage
-from models import UserProfile
+from models.user import UserProfile
 from services.llm import get_llm
 from services.news_api import fetch_news
 

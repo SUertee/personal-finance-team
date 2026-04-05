@@ -1,9 +1,9 @@
 """
-user_store.py - User profile management with MongoDB persistence.
+User profile management with PostgreSQL persistence and in-memory cache.
 """
 
-from models import ProfileUpdateRequest, UserProfile
-from mongo_store import get_profile_db, save_profile_db
+from db.profile_repo import get_profile_db, save_profile_db
+from models.user import ProfileUpdateRequest, UserProfile
 
 _cache: dict[str, UserProfile] = {}
 

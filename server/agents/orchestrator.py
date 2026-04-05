@@ -3,8 +3,8 @@ Orchestrator Agent - Uses LangGraph StateGraph for multi-agent collaboration
 """
 
 from agents.graph import build_agent_graph
-from memory import get_chat_history, save_message
-from user_store import get_profile
+from services.memory import get_chat_history, save_message
+from services.user_store import get_profile
 
 _graph = build_agent_graph()
 

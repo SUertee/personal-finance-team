@@ -54,7 +54,7 @@ Use `server/.env.example` as the reference for local configuration. The backend 
 - `LLM_PROVIDER=ollama` with `OLLAMA_BASE_URL` and `OLLAMA_MODEL`
 - `LLM_PROVIDER=openai` with `OPENAI_API_KEY` and `OPENAI_MODEL`
 - `POSTGRES_DSN` or `DATABASE_URL`
-- default local DSN: `postgresql://personal_finance_user:personal_finance_password@localhost:15432/personal_finance`
+- default local DSN: `postgresql://personal_finance_user:personal_finance_password@localhost:15433/personal_finance`
 - optional `NEWS_API_KEY`
 
 ### Client

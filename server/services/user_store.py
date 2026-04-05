@@ -2,8 +2,12 @@
 User profile management with PostgreSQL persistence and in-memory cache.
 """
 
+import logging
+
 from db.profile_repo import get_profile_db, save_profile_db
 from models.user import ProfileUpdateRequest, UserProfile
+
+logger = logging.getLogger(__name__)
 
 _cache: dict[str, UserProfile] = {}
 

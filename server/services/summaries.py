@@ -56,7 +56,7 @@ def build_category_summary(transactions: List[Dict[str, Any]]) -> Dict[str, Any]
     )[:10]
 
     return {
-        "by_month": {...},
+        "by_month": {m: dict(cats) for m, cats in by_month_cat.items()},
         "by_month_rows": build_by_month_rows(
             {m: dict(cats) for m, cats in by_month_cat.items()}
         ),

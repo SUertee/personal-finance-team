@@ -2,9 +2,12 @@
 Conversation memory with PostgreSQL persistence and in-memory cache.
 """
 
+import logging
 from collections import defaultdict
 
 from db.chat_repo import clear_history_db, get_chat_history_db, save_message_db
+
+logger = logging.getLogger(__name__)
 
 MAX_HISTORY = 50
 _history: dict[str, list[dict]] = defaultdict(list)

@@ -65,6 +65,7 @@ function computeMonthlyTotalsFromTxs(txs: TransactionRow[]): MonthlyTotal[] {
 }
 
 export default function App() {
+  // TODO: Replace hardcoded "demo" with auth-based user identification
   const userId = "demo";
 
   const [txs, setTxs] = useState<TransactionRow[]>([]);

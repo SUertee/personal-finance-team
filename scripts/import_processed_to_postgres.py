@@ -78,6 +78,7 @@ def main() -> None:
 
     records = load_json(transactions_path)
     summary = load_json(summary_path)
+    # TODO: Replace hardcoded "demo" with configurable value or CLI argument
     user_id = "demo"
 
     transactions = build_transactions(records)

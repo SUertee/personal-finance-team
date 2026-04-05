@@ -2,7 +2,10 @@
 /analyze endpoint - Original analysis pipeline.
 """
 
+import logging
+
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 from models.analysis import AnalyzeRequest
 from services.anomalies import detect_anomalies
@@ -10,6 +13,7 @@ from services.categorizer import enrich_transactions
 from services.llm import get_llm, llm_json_reply
 from services.summaries import build_category_summary
 
+logger = logging.getLogger(__name__)
 router = APIRouter()
 
 ANALYZE_SYSTEM_PROMPT = """
@@ -47,5 +51,6 @@ def analyze(req: AnalyzeRequest):
             **llm_out,
             "debug": {"rule_version": "v1", "model": "langchain"},
         }
-    except Exception as e:
-        return {"ok": False, "error": str(e)}
+    except Exception:
+        logger.exception("Analysis failed for user=%s", req.user_id)
+        return JSONResponse(status_code=500, content={"ok": False, "error": "Analysis failed"})

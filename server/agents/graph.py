@@ -11,7 +11,7 @@ from typing_extensions import TypedDict
 from agents import advisor, budget_analyst, expense_analyst, insight, news_scout
 from models.user import UserProfile
 from services.llm import get_llm, get_router_llm
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 
 class AgentState(TypedDict):
@@ -91,7 +91,6 @@ async def agent_dispatch_node(state: AgentState) -> dict:
         for m in state["chat_history"][-10:]:
             if m["role"] == "user": messages.append(HumanMessage(content=m["content"]))
             else:
-                from langchain_core.messages import AIMessage
                 messages.append(AIMessage(content=m["content"]))
     messages.append(HumanMessage(content=state["message"]))
     response = llm.invoke(messages)

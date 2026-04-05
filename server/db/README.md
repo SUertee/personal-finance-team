@@ -6,7 +6,7 @@ PostgreSQL persistence layer: connection management, schema, and data repositori
 
 | File | Description |
 |------|-------------|
-| `connection.py` | Shared connection singleton, auto-creates tables on first use |
+| `connection.py` | Connection pool management (psycopg_pool), auto-creates tables on first use |
 | `profile_repo.py` | CRUD for `user_profiles` table |
 | `chat_repo.py` | CRUD for `chat_history` table |
 | `schema.sql` | Single source of truth for the full database schema (can be run manually via `psql`) |
@@ -57,9 +57,9 @@ psql -U personal_finance_user -d personal_finance -f server/db/schema.sql
 Set one of these environment variables:
 
 ```
-POSTGRES_DSN=postgresql://personal_finance_user:personal_finance_password@localhost:15432/personal_finance
+POSTGRES_DSN=postgresql://personal_finance_user:personal_finance_password@localhost:15433/personal_finance
 # or
-DATABASE_URL=postgresql://personal_finance_user:personal_finance_password@localhost:15432/personal_finance
+DATABASE_URL=postgresql://personal_finance_user:personal_finance_password@localhost:15433/personal_finance
 ```
 
 If neither is set, the app falls back to in-memory storage only (no persistence across restarts).

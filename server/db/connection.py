@@ -1,35 +1,58 @@
 """
-Database connection management and schema initialization.
+Database connection pool management and schema initialization.
 """
 
+import logging
 import os
+from contextlib import contextmanager
 
-_conn = None
-_initialized = False
+logger = logging.getLogger(__name__)
+
+_pool = None
 
 
-def get_conn():
-    """Return a shared psycopg connection, or None if unavailable."""
-    global _conn, _initialized
-    if _conn is not None:
-        return _conn
+def init_pool():
+    """Create the connection pool and ensure schema exists."""
+    global _pool
+    if _pool is not None:
+        return
 
     dsn = os.getenv("POSTGRES_DSN") or os.getenv("DATABASE_URL", "")
     if not dsn:
-        return None
+        logger.warning("No POSTGRES_DSN or DATABASE_URL set — database disabled")
+        return
 
     try:
-        import psycopg
+        from psycopg_pool import ConnectionPool
 
-        _conn = psycopg.connect(dsn, autocommit=True)
-        with _conn.cursor() as cur:
-            cur.execute("SELECT 1")
-        if not _initialized:
-            _ensure_schema(_conn)
-            _initialized = True
-        return _conn
+        _pool = ConnectionPool(dsn, min_size=2, max_size=10, open=True)
+        with _pool.connection() as conn:
+            _ensure_schema(conn)
+        logger.info("Database pool initialized (min=2, max=10)")
     except Exception:
-        return None
+        logger.exception("Failed to initialize database pool")
+        _pool = None
+
+
+def close_pool():
+    """Gracefully close the connection pool."""
+    global _pool
+    if _pool is not None:
+        _pool.close()
+        _pool = None
+        logger.info("Database pool closed")
+
+
+@contextmanager
+def get_conn():
+    """Yield a connection from the pool. Returns None-context if pool unavailable."""
+    if _pool is None:
+        init_pool()
+    if _pool is None:
+        yield None
+        return
+    with _pool.connection() as conn:
+        yield conn
 
 
 def _ensure_schema(conn) -> None:
@@ -133,3 +156,4 @@ def _ensure_schema(conn) -> None:
             ON analysis_runs (user_id, created_at DESC, id DESC)
             """
         )
+    conn.commit()

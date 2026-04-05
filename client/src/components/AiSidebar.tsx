@@ -27,7 +27,7 @@ export function AiSidebar({ isOpen, onClose }: AiSidebarProps) {
   const llmEndpoint = useMemo(
     () =>
       (import.meta.env.VITE_LLM_ENDPOINT as string | undefined) ??
-      "http://localhost:8000/chat",
+      "http://localhost:18000/chat",
     []
   );
   const llmModel =

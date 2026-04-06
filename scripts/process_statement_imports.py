@@ -30,6 +30,17 @@ PROCESSED_DIR = ROOT / "storage" / "processed"
 ICBC_PASSWORD_FILE = IMPORTS_DIR / "icbc" / ".password"
 
 
+CURRENCY_MAP = {
+    "人民币": "CNY",
+    "澳元": "AUD",
+    "美元": "USD",
+    "港币": "HKD",
+    "日元": "JPY",
+    "欧元": "EUR",
+    "英镑": "GBP",
+}
+
+
 @dataclass
 class Transaction:
     source: str
@@ -40,6 +51,7 @@ class Transaction:
     direction: str
     amount: float
     gross_amount: float
+    currency: str
     counterparty: str
     description: str
     category: str
@@ -117,6 +129,7 @@ def parse_alipay_csv(path: Path) -> list[Transaction]:
                 direction=direction,
                 amount=normalize_signed_amount(direction, gross_amount),
                 gross_amount=gross_amount,
+                currency="CNY",
                 counterparty=(data.get("交易对方") or "").strip(),
                 description=(data.get("商品说明") or "").strip(),
                 category=(data.get("交易分类") or "").strip(),
@@ -188,6 +201,7 @@ def parse_wechat_xlsx(path: Path) -> list[Transaction]:
                 direction=direction,
                 amount=normalize_signed_amount(direction, gross_amount),
                 gross_amount=gross_amount,
+                currency="CNY",
                 counterparty=(data.get("交易对方") or "").strip(),
                 description=(data.get("商品") or "").strip(),
                 category=(data.get("交易类型") or "").strip(),
@@ -233,6 +247,7 @@ def parse_icbc_pdf(path: Path, password: str) -> list[Transaction]:
             data = match.groupdict()
             signed_amount = parse_amount(data["signed_amount"])
             direction = "income" if signed_amount > 0 else "expense"
+            currency = CURRENCY_MAP.get(data.get("currency", ""), data.get("currency", "CNY"))
             ts = f"{data['date']} {data['time']}"
             items.append(
                 Transaction(
@@ -244,6 +259,7 @@ def parse_icbc_pdf(path: Path, password: str) -> list[Transaction]:
                     direction=direction,
                     amount=signed_amount,
                     gross_amount=abs(signed_amount),
+                    currency=currency,
                     counterparty="",
                     description=data["summary"],
                     category=data["summary"],
@@ -345,6 +361,7 @@ def write_csv(path: Path, txs: list[Transaction]) -> None:
         "direction",
         "amount",
         "gross_amount",
+        "currency",
         "counterparty",
         "description",
         "category",

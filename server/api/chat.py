@@ -8,6 +8,7 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 
 from agents.orchestrator import handle_message
+from db.transactions_repo import get_latest_analysis_run_db, list_transactions_db
 from models.chat import ChatRequest, ChatResponse
 from services.memory import clear_history, get_chat_history
 
@@ -18,7 +19,15 @@ router = APIRouter()
 @router.post("/chat", response_model=ChatResponse)
 async def chat(req: ChatRequest):
     try:
-        result = await handle_message(user_id=req.user_id, message=req.message)
+        txns = list_transactions_db(req.user_id, limit=200)
+        run = get_latest_analysis_run_db(req.user_id)
+        monthly_totals = run.get("monthly_totals", []) if run else []
+        result = await handle_message(
+            user_id=req.user_id,
+            message=req.message,
+            transactions=txns,
+            monthly_totals=monthly_totals,
+        )
         return ChatResponse(**result)
     except Exception:
         logger.exception("Chat failed for user=%s", req.user_id)

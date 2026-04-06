@@ -44,7 +44,7 @@ def analyze(req: AnalyzeRequest):
         llm_out = llm_json_reply(llm, ANALYZE_SYSTEM_PROMPT, payload)
         return {
             "ok": True,
-            "meta": {"user_id": req.user_id, "currency": "AUD"},
+            "meta": {"user_id": req.user_id, "currency": "CNY"},
             "monthly_totals": req.monthly_totals,
             "category_summary": category_summary,
             "anomalies": anomalies,

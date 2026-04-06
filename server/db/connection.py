@@ -106,6 +106,7 @@ def _ensure_schema(conn) -> None:
                 counterparty TEXT NOT NULL DEFAULT '',
                 amount DOUBLE PRECISION NOT NULL,
                 gross_amount DOUBLE PRECISION NOT NULL DEFAULT 0,
+                currency TEXT NOT NULL DEFAULT 'CNY',
                 balance DOUBLE PRECISION,
                 direction TEXT NOT NULL DEFAULT '',
                 type TEXT NOT NULL DEFAULT '',
@@ -118,6 +119,7 @@ def _ensure_schema(conn) -> None:
                 source_file TEXT NOT NULL DEFAULT '',
                 source_format TEXT NOT NULL DEFAULT '',
                 note TEXT NOT NULL DEFAULT '',
+                is_duplicate BOOLEAN NOT NULL DEFAULT false,
                 raw JSONB NOT NULL DEFAULT '{}'::jsonb,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             )

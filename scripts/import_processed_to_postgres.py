@@ -15,6 +15,9 @@ SERVER_DIR = ROOT / "server"
 if str(SERVER_DIR) not in sys.path:
     sys.path.insert(0, str(SERVER_DIR))
 
+from dotenv import load_dotenv
+load_dotenv(SERVER_DIR / ".env")
+
 from db.transactions_repo import replace_latest_analysis_run_db, replace_transactions_db
 
 
@@ -53,6 +56,7 @@ def build_transactions(records: list[dict]) -> list[dict]:
                 "counterparty": record.get("counterparty", ""),
                 "amount": record.get("amount", 0),
                 "gross_amount": record.get("gross_amount", abs(record.get("amount", 0))),
+                "currency": record.get("currency", "CNY"),
                 "balance": balance,
                 "direction": record.get("direction", ""),
                 "type": record.get("transaction_type", ""),
@@ -71,6 +75,37 @@ def build_transactions(records: list[dict]) -> list[dict]:
     return items
 
 
+BANK_KEYWORDS = ["工商银行", "建设银行", "农业银行", "中国银行", "招商银行", "交通银行"]
+
+
+def mark_duplicates(transactions: list[dict]) -> None:
+    """Mark ICBC transactions as duplicates when a matching Alipay/WeChat record
+    exists on the same date with the same absolute amount.
+
+    Logic: if Alipay/WeChat paid via a bank card, the bank statement will also
+    have that transaction. We keep the Alipay/WeChat record (richer metadata)
+    and mark the bank record as duplicate.
+    """
+    # Build lookup: (date, abs_amount) -> list of non-bank transactions that used a bank card
+    via_bank: dict[tuple[str, float], list[dict]] = {}
+    for tx in transactions:
+        if tx["source"] in ("alipay", "wechat"):
+            pm = tx.get("payment_method", "")
+            if any(kw in pm for kw in BANK_KEYWORDS):
+                key = (tx["date"], round(abs(tx["amount"]), 2))
+                via_bank.setdefault(key, []).append(tx)
+
+    dup_count = 0
+    for tx in transactions:
+        if tx["source"] == "icbc":
+            key = (tx["date"], round(abs(tx["amount"]), 2))
+            if key in via_bank:
+                tx["is_duplicate"] = True
+                dup_count += 1
+
+    print(f"Marked {dup_count} ICBC transactions as duplicates")
+
+
 def main() -> None:
     processed_dir = ROOT / "storage" / "processed"
     transactions_path = processed_dir / "transactions.normalized.json"
@@ -82,6 +117,7 @@ def main() -> None:
     user_id = "demo"
 
     transactions = build_transactions(records)
+    mark_duplicates(transactions)
     monthly_totals = build_monthly_totals(summary)
     period_start = min((tx["date"] for tx in transactions), default=None)
     period_end = max((tx["date"] for tx in transactions), default=None)

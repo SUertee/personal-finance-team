@@ -5,7 +5,12 @@ export type TransactionRow = {
   month: string;       // "2025-03"
   description: string;
   amount: number;
+  currency?: string;
   balance: number | null;
+  direction?: string;
+  source?: string;
+  payment_method?: string;
+  is_duplicate?: boolean;
   type: "debit" | "credit" | string;
   category?: string | null;
   is_anomaly?: boolean | null;

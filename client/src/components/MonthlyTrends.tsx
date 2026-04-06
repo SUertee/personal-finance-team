@@ -1,5 +1,6 @@
 import React from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { currencySymbol } from './MetricsCards';
 
 interface MonthlyData {
   month: string;
@@ -9,11 +10,13 @@ interface MonthlyData {
 
 interface MonthlyTrendsProps {
   data: MonthlyData[];
+  currency?: string;
 }
 
-export function MonthlyTrends({ data }: MonthlyTrendsProps) {
+export function MonthlyTrends({ data, currency = 'CNY' }: MonthlyTrendsProps) {
+  const sym = currencySymbol(currency);
   return (
-    <div className="bg-white p-5 rounded-lg border border-gray-200 mb-6">
+    <div className="bg-white p-5 rounded-lg border border-gray-200">
       <h3 className="text-sm text-gray-900 mb-4">Monthly Breakdown</h3>
       
       <ResponsiveContainer width="100%" height={280}>
@@ -27,10 +30,10 @@ export function MonthlyTrends({ data }: MonthlyTrendsProps) {
           <YAxis 
             stroke="#9ca3af"
             style={{ fontSize: '12px' }}
-            tickFormatter={(value) => `$${value}`}
+            tickFormatter={(value) => `${sym}${value}`}
           />
-          <Tooltip 
-            formatter={(value: number) => `$${value.toFixed(2)}`}
+          <Tooltip
+            formatter={(value: number) => `${sym}${value.toFixed(2)}`}
             contentStyle={{ 
               backgroundColor: 'white', 
               border: '1px solid #e5e7eb',

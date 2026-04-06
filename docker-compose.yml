@@ -51,18 +51,10 @@ services:
     env_file:
       - ./server/.env
     environment:
-      - LLM_PROVIDER=ollama
-      - OLLAMA_MODEL=llama3.2:3b
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
-      # Uncomment below to use OpenAI instead:
-      # - LLM_PROVIDER=openai
-      # - OPENAI_API_KEY=sk-your-key
-      # - OPENAI_MODEL=gpt-4o
-      - ALLOWED_ORIGINS=http://localhost:5173
-      # PostgreSQL
+      # Override DSN for Docker internal networking (env_file provides all other vars)
       - POSTGRES_DSN=postgresql://personal_finance_user:personal_finance_password@db:5432/personal_finance
-      # NewsAPI
-      # - NEWS_API_KEY=your-key-here
+      - ALLOWED_ORIGINS=http://localhost:5173
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
       - TZ=Australia/Sydney
     restart: unless-stopped
 

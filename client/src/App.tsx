@@ -10,6 +10,8 @@ import { AiSidebar } from "./components/AiSidebar";
 import { MetricsCards } from "./components/MetricsCards";
 import { MonthlyTrends } from "./components/MonthlyTrends";
 import { TransactionsTable } from "./components/TransactionsTable";
+import { SourceBreakdown } from "./components/SourceBreakdown";
+import { CategoryPieChart } from "./components/CategoryPieChart";
 
 // 小工具：把 number 控制到 2 位，避免 43.760000000000005 这种
 function round2(n: number) {
@@ -173,26 +175,23 @@ export default function App() {
     return computeMonthlyTotalsFromTxs(txs);
   }, [monthlyTotalsFromRun, txs]);
 
-  // ✅ summary：给 MetricsCards
-  const summary = useMemo(() => {
-    let income = 0;
-    let expense = 0;
-
+  // ✅ summary：给 MetricsCards（按币种分组，排除重复）
+  const summaryByCurrency = useMemo(() => {
+    const map: Record<string, { income: number; expense: number }> = {};
     for (const t of txs) {
+      if (t.is_duplicate) continue;
+      const cur = t.currency || "CNY";
+      if (!map[cur]) map[cur] = { income: 0, expense: 0 };
       const amt = Number(t.amount || 0);
-      if (amt > 0) income += amt;
-      else expense += Math.abs(amt);
+      if (amt > 0) map[cur].income += amt;
+      else map[cur].expense += Math.abs(amt);
     }
-
-    income = round2(income);
-    expense = round2(expense);
-
-    return {
-      income,
-      expense,
-      net: round2(income - expense),
-      count: txs.length,
-    };
+    return Object.entries(map).map(([currency, v]) => ({
+      currency,
+      income: round2(v.income),
+      expense: round2(v.expense),
+      net: round2(v.income - v.expense),
+    }));
   }, [txs]);
 
   const monthlyTrendsData = useMemo(
@@ -210,12 +209,60 @@ export default function App() {
       txs.map((t, index) => ({
         id: t.id ?? String(index + 1),
         date: t.date ?? "—",
+        month: t.month ?? t.date?.slice(0, 7) ?? "—",
         merchant: t.description ?? "—",
         category: t.category ?? "Uncategorized",
         amount: Number(t.amount ?? 0),
+        currency: t.currency ?? "CNY",
+        source: t.source ?? "manual",
+        payment_method: t.payment_method ?? "",
+        is_duplicate: t.is_duplicate ?? false,
       })),
     [txs]
   );
+
+  // Source breakdown data
+  const sourceData = useMemo(() => {
+    const map: Record<string, Record<string, { count: number; income: number; expense: number }>> = {};
+    for (const t of txs) {
+      const src = t.source || "manual";
+      const cur = t.currency || "CNY";
+      const key = `${src}:${cur}`;
+      if (!map[src]) map[src] = {};
+      if (!map[src][cur]) map[src][cur] = { count: 0, income: 0, expense: 0 };
+      map[src][cur].count++;
+      const amt = Number(t.amount || 0);
+      if (amt > 0) map[src][cur].income += amt;
+      else map[src][cur].expense += Math.abs(amt);
+    }
+    const items: { source: string; currency: string; count: number; income: number; expense: number }[] = [];
+    for (const [source, currencies] of Object.entries(map)) {
+      for (const [currency, v] of Object.entries(currencies)) {
+        items.push({ source, currency, count: v.count, income: round2(v.income), expense: round2(v.expense) });
+      }
+    }
+    return items;
+  }, [txs]);
+
+  // Category pie chart data (expenses only, excluding duplicates)
+  const categoryData = useMemo(() => {
+    const catMap: Record<string, { amount: number; currency: string }> = {};
+    for (const t of txs) {
+      if (t.is_duplicate) continue;
+      const amt = Number(t.amount || 0);
+      if (amt >= 0) continue;
+      const cat = t.category || "其他";
+      const cur = t.currency || "CNY";
+      const key = `${cat}|${cur}`;
+      if (!catMap[key]) catMap[key] = { amount: 0, currency: cur };
+      catMap[key].amount += Math.abs(amt);
+    }
+    return Object.entries(catMap).map(([key, v]) => ({
+      category: key.split("|")[0],
+      amount: round2(v.amount),
+      currency: v.currency,
+    }));
+  }, [txs]);
 
   const reportInput = latestRun?.input ?? null;
   const reportText = useMemo(() => {
@@ -270,12 +317,12 @@ export default function App() {
 
           {!loading && !errMsg && (
             <>
-              <MetricsCards
-                totalIncome={summary.income}
-                totalExpenses={summary.expense}
-                netBalance={summary.net}
-              />
-              <MonthlyTrends data={monthlyTrendsData} />
+              <MetricsCards items={summaryByCurrency} />
+              <SourceBreakdown items={sourceData} />
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <MonthlyTrends data={monthlyTrendsData} currency={summaryByCurrency[0]?.currency ?? 'CNY'} />
+                <CategoryPieChart data={categoryData} />
+              </div>
               <TransactionsTable transactions={tableTransactions} />
 
               <div className="mt-6 bg-white rounded-lg border border-gray-200">

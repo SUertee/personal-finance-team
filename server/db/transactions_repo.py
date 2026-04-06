@@ -20,9 +20,9 @@ def list_transactions_db(user_id: str, limit: int = 200) -> list[dict]:
                 cur.execute(
                     """
                     SELECT id, user_id, date, month, description, counterparty, amount,
-                           gross_amount, balance, direction, type, category, status,
+                           gross_amount, currency, balance, direction, type, category, status,
                            payment_method, external_id, merchant_order_id, source,
-                           source_file, source_format, note, raw, created_at
+                           source_file, source_format, note, is_duplicate, raw, created_at
                     FROM transactions
                     WHERE user_id = %s
                     ORDER BY date ASC, id ASC
@@ -43,20 +43,22 @@ def list_transactions_db(user_id: str, limit: int = 200) -> list[dict]:
                         "counterparty": row[5],
                         "amount": float(row[6]),
                         "gross_amount": float(row[7]),
-                        "balance": float(row[8]) if row[8] is not None else None,
-                        "direction": row[9],
-                        "type": row[10],
-                        "category": row[11],
-                        "status": row[12],
-                        "payment_method": row[13],
-                        "external_id": row[14],
-                        "merchant_order_id": row[15],
-                        "source": row[16],
-                        "source_file": row[17],
-                        "source_format": row[18],
-                        "note": row[19],
-                        "raw": row[20],
-                        "created_at": row[21].isoformat(),
+                        "currency": row[8],
+                        "balance": float(row[9]) if row[9] is not None else None,
+                        "direction": row[10],
+                        "type": row[11],
+                        "category": row[12],
+                        "status": row[13],
+                        "payment_method": row[14],
+                        "external_id": row[15],
+                        "merchant_order_id": row[16],
+                        "source": row[17],
+                        "source_file": row[18],
+                        "source_format": row[19],
+                        "note": row[20],
+                        "is_duplicate": row[21],
+                        "raw": row[22],
+                        "created_at": row[23].isoformat(),
                     }
                 )
             return results
@@ -78,15 +80,15 @@ def replace_transactions_db(user_id: str, transactions: list[dict[str, Any]]) ->
                             """
                             INSERT INTO transactions (
                                 user_id, date, month, description, counterparty, amount,
-                                gross_amount, balance, direction, type, category, status,
+                                gross_amount, currency, balance, direction, type, category, status,
                                 payment_method, external_id, merchant_order_id, source,
-                                source_file, source_format, note, raw
+                                source_file, source_format, note, is_duplicate, raw
                             )
                             VALUES (
                                 %s, %s, %s, %s, %s, %s,
-                                %s, %s, %s, %s, %s, %s,
+                                %s, %s, %s, %s, %s, %s, %s,
                                 %s, %s, %s, %s,
-                                %s, %s, %s, %s::jsonb
+                                %s, %s, %s, %s, %s::jsonb
                             )
                             """,
                             (
@@ -97,6 +99,7 @@ def replace_transactions_db(user_id: str, transactions: list[dict[str, Any]]) ->
                                 tx.get("counterparty", ""),
                                 tx.get("amount", 0),
                                 tx.get("gross_amount", abs(tx.get("amount", 0))),
+                                tx.get("currency", "CNY"),
                                 tx.get("balance"),
                                 tx.get("direction", ""),
                                 tx.get("type", ""),
@@ -109,6 +112,7 @@ def replace_transactions_db(user_id: str, transactions: list[dict[str, Any]]) ->
                                 tx.get("source_file", ""),
                                 tx.get("source_format", ""),
                                 tx.get("note", ""),
+                                tx.get("is_duplicate", False),
                                 json.dumps(tx.get("raw", {}), ensure_ascii=False),
                             ),
                         )

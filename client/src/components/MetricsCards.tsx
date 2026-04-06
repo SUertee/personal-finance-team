@@ -1,13 +1,36 @@
 import React from 'react';
 import { TrendingUp, TrendingDown, DollarSign } from 'lucide-react';
 
-interface MetricsCardsProps {
-  totalIncome: number;
-  totalExpenses: number;
-  netBalance: number;
+const CURRENCY_SYMBOL: Record<string, string> = {
+  CNY: '¥',
+  AUD: 'A$',
+  USD: '$',
+  HKD: 'HK$',
+  JPY: '¥',
+  EUR: '€',
+  GBP: '£',
+};
+
+export function currencySymbol(code: string): string {
+  return CURRENCY_SYMBOL[code] || code + ' ';
 }
 
-export function MetricsCards({ totalIncome, totalExpenses, netBalance }: MetricsCardsProps) {
+function formatAmount(amount: number, currency: string): string {
+  return `${currencySymbol(currency)}${amount.toFixed(2)}`;
+}
+
+interface CurrencySummary {
+  currency: string;
+  income: number;
+  expense: number;
+  net: number;
+}
+
+interface MetricsCardsProps {
+  items: CurrencySummary[];
+}
+
+export function MetricsCards({ items }: MetricsCardsProps) {
   return (
     <div className="grid grid-cols-3 gap-4 mb-6">
       {/* Total Income Card */}
@@ -18,8 +41,12 @@ export function MetricsCards({ totalIncome, totalExpenses, netBalance }: Metrics
             <TrendingUp className="w-4 h-4 text-green-600" />
           </div>
         </div>
-        <div className="text-2xl text-green-600">
-          ${totalIncome.toFixed(2)}
+        <div className="text-green-600">
+          {items.map((s) => (
+            <div key={s.currency} className="text-2xl">
+              {formatAmount(s.income, s.currency)}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -31,8 +58,12 @@ export function MetricsCards({ totalIncome, totalExpenses, netBalance }: Metrics
             <TrendingDown className="w-4 h-4 text-red-600" />
           </div>
         </div>
-        <div className="text-2xl text-red-600">
-          ${totalExpenses.toFixed(2)}
+        <div className="text-red-600">
+          {items.map((s) => (
+            <div key={s.currency} className="text-2xl">
+              {formatAmount(s.expense, s.currency)}
+            </div>
+          ))}
         </div>
       </div>
 
@@ -44,8 +75,12 @@ export function MetricsCards({ totalIncome, totalExpenses, netBalance }: Metrics
             <DollarSign className="w-4 h-4 text-slate-600" />
           </div>
         </div>
-        <div className={`text-2xl ${netBalance >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
-          ${netBalance.toFixed(2)}
+        <div>
+          {items.map((s) => (
+            <div key={s.currency} className={`text-2xl ${s.net >= 0 ? 'text-slate-900' : 'text-red-600'}`}>
+              {formatAmount(s.net, s.currency)}
+            </div>
+          ))}
         </div>
       </div>
     </div>
